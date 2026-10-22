@@ -1,0 +1,49 @@
+# ---------------- Python ----------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ---------------- 环境变量 ----------------
+.env
+.env.local
+
+# ---------------- IDE / 系统 ----------------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------- 模型权重（体积大，不入库） ----------------
+pretrained/*
+!pretrained/.gitkeep
+outputs/models/*
+!outputs/models/.gitkeep
+outputs/checkpoints/*
+!outputs/checkpoints/.gitkeep
+
+# 各类模型文件
+*.pt
+*.pth
+*.bin
+*.pkl
+*.joblib
+*.safetensors
+*.onnx
+*.ckpt
+
+# ---------------- 运行产物 ----------------
+data/processed/*
+!data/processed/.gitkeep
+outputs/logs/*
+!outputs/logs/.gitkeep
+
+# 说明：outputs/reports/*.json 是评估指标，体积小且值得入库，故不忽略

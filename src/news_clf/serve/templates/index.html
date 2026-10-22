@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新闻文本分类 · News Text Classification</title>
+  <style>
+    :root {
+      --bg: #f5f6fa;
+      --panel: #ffffff;
+      --border: #e6e8f0;
+      --text: #1c2030;
+      --muted: #6b7280;
+      --primary: #4f46e5;
+      --primary-soft: #eef0ff;
+      --accent: #0d9488;
+      --danger: #dc2626;
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px rgba(16, 24, 40, .06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 32px 20px 56px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page { max-width: 1080px; margin: 0 auto; }
+
+    /* ---------------- 顶部 ---------------- */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      width: 46px; height: 46px;
+      flex: none;
+      display: grid; place-items: center;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: .5px;
+      box-shadow: 0 6px 18px rgba(79, 70, 229, .28);
+    }
+
+    header h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: .2px; }
+    header p  { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+
+    .badges { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .badge.on { color: var(--accent); border-color: #b7e6df; background: #f0fdfa; }
+
+    /* ---------------- 通用面板 ---------------- */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 22px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .panel-head h2 { margin: 0; font-size: 14.5px; font-weight: 650; }
+    .panel-head .hint, .panel-head .meta { font-size: 12.5px; color: var(--muted); }
+
+    /* ---------------- 模型选择 ---------------- */
+    .model-panel { margin-bottom: 18px; }
+
+    .model-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(208px, 1fr));
+      gap: 10px;
+    }
+
+    .model-chip {
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+      padding: 11px 13px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: #fcfcfe;
+      transition: border-color .15s, background .15s, transform .15s;
+    }
+    .model-chip:hover:not(.disabled) { border-color: #c7c9f5; transform: translateY(-1px); }
+    .model-chip.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+    .model-chip.disabled { opacity: .55; cursor: not-allowed; background: #fafafc; }
+
+    .model-chip .name { display: block; font-size: 13.5px; font-weight: 600; }
+    .model-chip .family { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .model-chip .state { display: inline-block; font-size: 11px; margin-top: 6px; }
+    .model-chip .state.ok { color: var(--accent); }
+    .model-chip .state.no { color: #9ca3af; }
+
+    /* ---------------- 主区域 ---------------- */
+    .grid {
+      display: grid;
+      grid-template-columns: 1.12fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 190px;
+      padding: 14px 15px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: #fbfbfd;
+      color: var(--text);
+      font: inherit;
+      font-size: 14.5px;
+      line-height: 1.75;
+      resize: vertical;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    textarea:focus {
+      outline: none;
+      background: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+    }
+    textarea::placeholder { color: #a6abbd; }
+
+    .examples { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+    .example {
+      font-size: 12.5px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .example:hover { color: var(--primary); border-color: #c7c9f5; background: var(--primary-soft); }
+
+    .actions { display: flex; gap: 10px; margin-top: 16px; }
+
+    button.btn-primary, button.btn-ghost {
+      font: inherit;
+      font-size: 14.5px;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    button.btn-primary {
+      flex: 1;
+      border: none;
+      color: #fff;
+      background: linear-gradient(135deg, #4f46e5, #6d5ce7);
+      box-shadow: 0 6px 16px rgba(79, 70, 229, .25);
+    }
+    button.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(79, 70, 229, .3); }
+    button.btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    button.btn-ghost {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+    }
+    button.btn-ghost:hover { color: var(--text); border-color: #d3d6e2; }
+
+    /* ---------------- 结果 ---------------- */
+    .placeholder {
+      min-height: 218px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #a6abbd;
+      font-size: 13.5px;
+      border: 1px dashed var(--border);
+      border-radius: 11px;
+      padding: 20px;
+    }
+
+    .result-main {
+      padding: 16px 18px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f5f4ff, #f0f9f8);
+      border: 1px solid #e9e7ff;
+    }
+    .label-en {
+      font-size: 27px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      color: var(--primary);
+      line-height: 1.25;
+    }
+    .label-cn { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+    .confidence { margin-top: 10px; font-size: 13px; color: var(--muted); }
+    .confidence strong { font-size: 20px; color: var(--text); font-weight: 650; }
+
+    .bars { margin-top: 16px; display: grid; gap: 9px; }
+    .bar-row { display: grid; grid-template-columns: 88px 1fr 48px; align-items: center; gap: 10px; }
+    .bar-row .lb { font-size: 12.5px; color: var(--muted); text-align: right; }
+    .bar-row.top .lb { color: var(--text); font-weight: 600; }
+    .bar-track { height: 7px; border-radius: 999px; background: #eef0f6; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; background: #c7c9f5; transition: width .5s ease; }
+    .bar-row.top .bar-fill { background: linear-gradient(90deg, #4f46e5, #7c3aed); }
+    .bar-row .val { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .bar-row.top .val { color: var(--text); font-weight: 600; }
+
+    .result-meta {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .error {
+      padding: 14px 16px;
+      border-radius: 11px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: var(--danger);
+      font-size: 13.5px;
+      white-space: pre-wrap;
+    }
+
+    footer {
+      margin-top: 26px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 880px) {
+      .grid { grid-template-columns: 1fr; }
+      header h1 { font-size: 19px; }
+      .badges { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="brand">NTC</div>
+      <div>
+        <h1>新闻文本分类</h1>
+        <p>10 类中文新闻 · 7 种建模方案 · 统一推理接口</p>
+      </div>
+      <div class="badges">
+        <span class="badge" id="badgeDevice">设备 —</span>
+        <span class="badge" id="badgeVersion">v—</span>
+      </div>
+    </header>
+
+    <section class="panel model-panel">
+      <div class="panel-head">
+        <h2>选择模型</h2>
+        <span class="hint">灰色表示权重尚未训练，可用 <code>news-clf train</code> 生成</span>
+      </div>
+      <div class="model-list" id="modelList"></div>
+    </section>
+
+    <main class="grid">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>输入新闻</h2>
+          <span class="hint" id="counter">0 字</span>
+        </div>
+        <textarea id="text" placeholder="粘贴一段中文新闻正文，例如：
+昨晚 CBA 常规赛第 12 轮，广东队在主场以 110:98 战胜对手，取得三连胜。"></textarea>
+        <div class="examples" id="examples"></div>
+        <div class="actions">
+          <button class="btn-primary" id="submit">开始分类</button>
+          <button class="btn-ghost" id="clear">清空</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>分类结果</h2>
+          <span class="meta" id="latency"></span>
+        </div>
+        <div class="placeholder" id="placeholder">选择模型并输入文本后，结果会显示在这里</div>
+        <div id="result" hidden>
+          <div class="result-main">
+            <div class="label-en" id="resultLabel">—</div>
+            <div class="label-cn" id="resultCn">—</div>
+            <div class="confidence"><strong id="resultConf">0%</strong> 置信度</div>
+          </div>
+          <div class="bars" id="bars"></div>
+          <div class="result-meta">
+            <span id="resultModel">—</span>
+            <span id="resultTime">—</span>
+          </div>
+        </div>
+        <div class="error" id="error" hidden></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>FastAPI 服务 · <a href="/docs">交互式 API 文档</a></span>
+      <span id="footerInfo">模型加载中…</span>
+    </footer>
+  </div>
+
+  <script>
+    const EXAMPLES = [
+      ["体育", "昨晚 CBA 常规赛第 12 轮，广东队在主场以 110:98 战胜对手，取得三连胜。"],
+      ["股市", "沪指今日收涨 1.2%，白酒与新能源板块领涨，两市成交额重回万亿。"],
+      ["教育", "教育部发布新规，中小学课后服务将实现全覆盖，鼓励学校引入社会资源。"],
+      ["科技", "我国科学家在量子计算领域取得重大突破，相关成果发表于国际顶级期刊。"],
+      ["娱乐", "某知名演员官宣结婚，相关话题迅速登上热搜第一，粉丝纷纷送上祝福。"],
+    ];
+
+    const state = { models: [], labels: {}, selected: null, defaultModel: null };
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[ch]));
+    }
+
+    async function bootstrap() {
+      try {
+        const [modelsRes, labelsRes, healthRes] = await Promise.all([
+          fetch("/api/models").then((r) => r.json()),
+          fetch("/api/labels").then((r) => r.json()),
+          fetch("/api/health").then((r) => r.json()),
+        ]);
+
+        state.models = modelsRes.models;
+        state.defaultModel = modelsRes.default_model;
+        (labelsRes.labels || []).forEach((item) => { state.labels[item.name] = item.description; });
+
+        $("badgeDevice").textContent = "设备 " + healthRes.device.toUpperCase();
+        $("badgeVersion").textContent = "v" + healthRes.version;
+        $("badgeDevice").classList.add("on");
+
+        renderModels();
+        const ready = state.models.filter((m) => m.available).length;
+        $("footerInfo").textContent = `共 ${state.models.length} 个模型，${ready} 个可用`;
+        if (!ready) {
+          showError("当前没有可用模型。请先训练模型（如 news-clf train --model tfidf-rf），或配置 LLM API Key。");
+        }
+      } catch (err) {
+        showError("加载模型列表失败：" + err.message);
+      }
+    }
+
+    function renderModels() {
+      const container = $("modelList");
+      container.innerHTML = "";
+
+      state.models.forEach((model) => {
+        const button = document.createElement("button");
+        button.className = "model-chip" + (model.available ? "" : " disabled");
+        button.type = "button";
+        button.title = model.available ? model.description : model.status;
+        button.innerHTML = `
+          <span class="name">${escapeHtml(model.display_name)}</span>
+          <span class="family">${escapeHtml(model.family)}</span>
+          <span class="state ${model.available ? "ok" : "no"}">${model.available ? "已就绪" : escapeHtml(model.status)}</span>
+        `;
+        if (model.available) {
+          button.addEventListener("click", () => selectModel(model.key));
+        }
+        button.dataset.key = model.key;
+        container.appendChild(button);
+      });
+
+      const preferred = state.models.find((m) => m.key === state.defaultModel && m.available)
+        || state.models.find((m) => m.available);
+      if (preferred) selectModel(preferred.key);
+
+      renderExamples();
+    }
+
+    function selectModel(key) {
+      state.selected = key;
+      document.querySelectorAll(".model-chip").forEach((chip) => {
+        chip.classList.toggle("active", chip.dataset.key === key);
+      });
+    }
+
+    function renderExamples() {
+      const box = $("examples");
+      box.innerHTML = "";
+      EXAMPLES.forEach(([tag, text]) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "example";
+        chip.textContent = tag;
+        chip.title = text;
+        chip.addEventListener("click", () => {
+          $("text").value = text;
+          updateCounter();
+          $("text").focus();
+        });
+        box.appendChild(chip);
+      });
+    }
+
+    function updateCounter() {
+      $("counter").textContent = $("text").value.length + " 字";
+    }
+
+    function showError(message) {
+      $("placeholder").hidden = true;
+      $("result").hidden = true;
+      $("error").hidden = false;
+      $("error").textContent = message;
+      $("latency").textContent = "";
+    }
+
+    function renderResult(data) {
+      $("error").hidden = true;
+      $("placeholder").hidden = true;
+      $("result").hidden = false;
+
+      const description = state.labels[data.label] || "";
+      $("resultLabel").textContent = data.label;
+      $("resultCn").textContent = description;
+      $("resultConf").textContent = (data.confidence * 100).toFixed(1) + "%";
+      $("latency").textContent = data.latency_ms.toFixed(1) + " ms";
+      $("resultModel").textContent = "模型：" + data.model;
+      $("resultTime").textContent = "服务端耗时 " + data.latency_ms.toFixed(1) + " ms";
+
+      const bars = $("bars");
+      bars.innerHTML = "";
+      Object.entries(data.scores).forEach(([label, score], index) => {
+        const row = document.createElement("div");
+        row.className = "bar-row" + (index === 0 ? " top" : "");
+        row.innerHTML = `
+          <span class="lb">${escapeHtml(label)}</span>
+          <span class="bar-track"><span class="bar-fill" style="width:${Math.max(score * 100, 1).toFixed(1)}%"></span></span>
+          <span class="val">${(score * 100).toFixed(1)}%</span>
+        `;
+        bars.appendChild(row);
+      });
+    }
+
+    async function submit() {
+      const text = $("text").value.trim();
+      if (!text) { showError("请先输入一段新闻文本。"); return; }
+      if (!state.selected) { showError("请选择一个可用模型。"); return; }
+
+      const button = $("submit");
+      button.disabled = true;
+      button.textContent = "推理中…";
+      $("latency").textContent = "";
+
+      try {
+        const response = await fetch("/api/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, model: state.selected, top_k: 5 }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || ("HTTP " + response.status));
+        }
+        renderResult(data);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "开始分类";
+      }
+    }
+
+    $("submit").addEventListener("click", submit);
+    $("clear").addEventListener("click", () => {
+      $("text").value = "";
+      updateCounter();
+      $("result").hidden = true;
+      $("error").hidden = true;
+      $("placeholder").hidden = false;
+      $("latency").textContent = "";
+      $("text").focus();
+    });
+    $("text").addEventListener("input", updateCounter);
+    $("text").addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") submit();
+    });
+
+    bootstrap();
+    updateCounter();
+  </script>
+</body>
+</html>

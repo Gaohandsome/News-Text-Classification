@@ -1,0 +1,31 @@
+{
+  "model": "fasttext_word",
+  "generated_at": "2026-10-22 10:36:17",
+  "config": {
+    "seed": 42,
+    "device": "cpu",
+    "labels": [
+      "finance",
+      "realty",
+      "stocks",
+      "education",
+      "science",
+      "society",
+      "politics",
+      "sports",
+      "game",
+      "entertainment"
+    ],
+    "max_len": 32,
+    "batch_size": 64
+  },
+  "granularity": "word",
+  "autotune": false,
+  "metrics": {
+    "accuracy": 0.9135,
+    "precision_macro": 0.9135,
+    "recall_macro": 0.9135,
+    "f1_macro": 0.9135,
+    "num_samples": 10000
+  }
+}
